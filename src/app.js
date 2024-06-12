@@ -1,10 +1,6 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
-// import { initializeApp } from "./libs/initalSetup.js";
-
-
-// blog
 import login from "./routes/login.routes.js"
 import blog from "./routes/post.routes.js";
 import comment from "./routes/comments.routes.js";
@@ -15,7 +11,6 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 
-// initializeApp();
 
 app.use(login);
 app.use(blog);

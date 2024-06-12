@@ -1,8 +1,7 @@
-// Cada publicación debe tener un título, contenido y la opción de adjuntar imágenes.
 import { Schema, model } from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 
-export const blogSchema = new Schema(
+export const postSchema = new Schema(
     {
         
         idUser: {
@@ -18,15 +17,7 @@ export const blogSchema = new Schema(
             type: String
         },
         comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }]  ,
-        front_image: {
-            publicId: {
-                type: String,
-            },
-            secureUrl: {
-                type: String,
-            },
-        },
-        back_image: {
+        imagePost: {
             publicId: {
                 type: String,
             },
@@ -40,5 +31,5 @@ export const blogSchema = new Schema(
         timestamps: true,
     }
 )
-blogSchema.plugin(mongoosePaginate)
-export default model("Post", blogSchema);
+postSchema.plugin(mongoosePaginate)
+export default model("Post", postSchema);

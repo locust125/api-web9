@@ -10,7 +10,7 @@ const commentSchema = new Schema(
         },
         postId: {
             type: Schema.Types.ObjectId,
-            ref: "Blog",
+            ref: "Post",
             required: true
         },
         idUser: {
@@ -18,14 +18,10 @@ const commentSchema = new Schema(
             ref: "User",
             required: true
         },
-        // date: {
-        //     type: Date,
-        //     default: Date.now
-        // }
     },
     {
         versionKey: false,
-        timestamps: true,  // Asegura que createdAt y updatedAt se manejen automáticamente
+        timestamps: true,  
     }
 );
 

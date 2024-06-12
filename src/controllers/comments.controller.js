@@ -1,6 +1,6 @@
 import Comment from "../models/comments.js";
 
-import Blog from "../models/post.model.js";
+import PostModel from "../models/post.model.js";
 import User from "../models/User.js";
 import { format } from "date-fns";
 
@@ -9,9 +9,9 @@ export const addComment = async (req, res) => {
     const { comment, postId, idUser } = req.body;
 
     const findBlogPost = async (postId) => {
-        const blogPost = await Blog.findById(postId);
+        const blogPost = await PostModel.findById(postId);
         if (!blogPost) {
-            throw new Error("Blog post not found");
+            throw new Error("Post not found");
         }
         return blogPost;
     };

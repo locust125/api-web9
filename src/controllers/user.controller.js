@@ -1,10 +1,10 @@
 import Blog from "../models/post.model.js";
 import User from "../models/User.js";
 
-export const getUserPosts = async (req, res) => {
+export const getUserPostsById = async (req, res) => {
     try {
         const { id_user } = req.params;
-        const userPosts = await Blog.find({ idUser: id_user }).select('title content front_image back_image');
+        const userPosts = await Blog.find({ idUser: id_user }).select('title content imagePost');
         if (userPosts.length === 0) {
             return res.status(404).json({ message: "No posts found for this user" });
         }
@@ -19,13 +19,11 @@ export const getUserPosts = async (req, res) => {
 
 
 
-export const updateUser = async (req, res) => {
+export const updateUserById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Verifica si se proporciona una nueva contraseña en la solicitud
         if (req.body.password) {
-            // Encripta la nueva contraseña
             req.body.password = await User.encryptPassword(req.body.password);
         }
 

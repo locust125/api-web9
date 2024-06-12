@@ -20,13 +20,13 @@ router.put(
         useTempFiles: true,
         tempFileDir: "./uploads",
     }),
-    verify.verifyToken,
-    controllerP.updatePost
+    // verify.verifyToken,
+    controllerP.updatePostById
 );
 
 router.get("/getAll/post", verify.verifyToken, controllerP.getAllPost);
 
-router.delete("/delete/post/:id", verify.verifyToken,controllerP.deletePost);
+router.delete("/delete/post/:id", verify.verifyToken,controllerP.deletePostById);
 
 
 export default router;

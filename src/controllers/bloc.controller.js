@@ -1,4 +1,4 @@
-import Blog from "../models/post.model.js";
+import PostModel from "../models/post.model.js";
 import fs from "fs-extra";
 import mongoose from "mongoose"
 import { uploadImage, deleteImage } from "../utils/cloudinary.js";
@@ -8,13 +8,13 @@ import { uploadImage, deleteImage } from "../utils/cloudinary.js";
 export const createPost = async (req, res) => {
     const { title, content, idUser } = req.body;
 
-    const createNewBlog = async () => {
-        const newBlog = new Blog({ title, content,idUser });
+    const createNewPost = async () => {
+        const newBlog = new PostModel({ title, content,idUser });
 
         if (req.files) {
-            const { front_image, back_image } = req.files;
-            await handleImageUpload(front_image, newBlog, 'front_image');
-            await handleImageUpload(back_image, newBlog, 'back_image');
+            const { imagePost } = req.files;
+            await handleImageUpload(imagePost, newBlog, 'imagePost');
+            // await handleImageUpload(back_image, newBlog, 'back_image');
         } else {
             console.warn('No files were uploaded.');
         }
@@ -40,7 +40,7 @@ export const createPost = async (req, res) => {
     };
 
     try {
-        const productSave = await createNewBlog();
+        const productSave = await createNewPost();
         return res.status(201).json({ message: "Created Post", productSave });
     } catch (error) {
         console.error(error.message);
@@ -52,7 +52,7 @@ export const createPost = async (req, res) => {
 export const getAllPost = async (req, res) => {
     try {
         const { page = 1, limit = 10 } = req.query;
-        const response = await Blog.paginate(
+        const response = await PostModel.paginate(
             {},
             {
                 limit,
@@ -65,21 +65,21 @@ export const getAllPost = async (req, res) => {
         return res.status(500).json({ message: "something went wrong" ,error: error.message});
     }
 }; 
-export const deletePost = async (req, res) => {
+export const deletePostById = async (req, res) => {
     try {
         const { id } = req.params;
-        const blog = await Blog.findByIdAndDelete(id);
+        const post = await PostModel.findByIdAndDelete(id);
 
-        if (!blog) {
+        if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
 
-        if (blog.front_image && blog.front_image.publicId) {
-            await deleteImage(blog.front_image.publicId);
+        if (post.imagePost && post.imagePost.publicId) {
+            await deleteImage(post.imagePost.publicId);
         }
 
-        if (blog.back_image && blog.back_image.publicId) {
-            await deleteImage(blog.back_image.publicId);
+        if (post.back_image && post.back_image.publicId) {
+            await deleteImage(post.back_image.publicId);
         }
 
         return res.status(200).json({ message: "Post deleted" });
@@ -88,42 +88,80 @@ export const deletePost = async (req, res) => {
     }
 };
 
-export const updatePost = async (req, res) => {
-    const { id } = req.params;
-    const updateFields = req.body;
-
-    const handleImageUpdate = async (imageFile, currentImageField) => {
-        if (imageFile) {
-            const result = await uploadImage(imageFile.tempFilePath);
-            updateFields[currentImageField] = {
-                publicId: result.public_id,
-                secureUrl: result.secure_url,
-            };
-            if (updatedPostUser[currentImageField]?.publicId) {
-                await deleteImage(updatedPostUser[currentImageField].publicId);
-            }
-            fs.unlink(imageFile.tempFilePath, (err) => {
-                if (err) console.error(`Error deleting ${currentImageField} temp file: ${err.message}`);
-            });
-        }
-    };
-
+export const updatePostById = async (req, res) => {
     try {
-        const updatedPostUser = await Blog.findByIdAndUpdate(id, updateFields, { new: true });
+        const { id } = req.params;
+
+        const updateFields = req.body;
+
+        const updatedPostUser = await PostModel.findByIdAndUpdate(
+            id,
+            updateFields,
+            {
+                new: true,
+            }
+        );
+
         if (!updatedPostUser) {
-            return res.status(404).json({ message: "Product not found" });
+            return res.status(404).json({ message: "Post not found" });
         }
 
-        await handleImageUpdate(req.files?.front_image, 'front_image');
-        await handleImageUpdate(req.files?.back_image, 'back_image');
+        if (req.files?.imagePost) {
+            const resultFrontImage = await uploadImage(
+                req.files.imagePost.tempFilePath
+            );
+            updateFields.imagePost = {
+                publicId: resultFrontImage.public_id,
+                secureUrl: resultFrontImage.secure_url,
+            };
 
-        const updatedPostUserWithImages = await Blog.findByIdAndUpdate(id, updateFields, { new: true });
-        res.status(200).json({ data: updatedPostUserWithImages });
+            if (
+                updatedPostUser.imagePost &&
+                updatedPostUser.imagePost.publicId
+            ) {
+                await deleteImage(updatedPostUser.imagePost.publicId);
+            }
+
+            fs.unlink(req.files.imagePost.tempFilePath);
+        }
+
+        if (req.files?.back_image) {
+            const resultBackImage = await uploadImage(
+                req.files.back_image.tempFilePath
+            );
+            updateFields.back_image = {
+                publicId: resultBackImage.public_id,
+                secureUrl: resultBackImage.secure_url,
+            };
+
+            if (
+                updatedPostUser.back_image &&
+                updatedPostUser.back_image.publicId
+            ) {
+                await deleteImage(updatedPostUser.back_image.publicId);
+            }
+
+            fs.unlink(req.files.back_image.tempFilePath);
+        }
+
+        const updatedPostUserWithImages = await PostModel.findByIdAndUpdate(
+            id,
+            updateFields,
+            { new: true }
+        );
+
+        const response = {
+            data: updatedPostUserWithImages,
+        };
+
+        res.status(200).json(response);
     } catch (error) {
         console.error(error);
+
         if (error instanceof mongoose.Error.CastError) {
             return res.status(400).json({ message: "Invalid Id" });
         }
+
         return res.status(500).json({ message: "Something went wrong" });
     }
 };
